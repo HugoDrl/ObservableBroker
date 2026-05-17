@@ -47,14 +47,15 @@ func NewStorage(ttl time.Duration) *Data{
 	return &d
 }
 
-func (d *Data) deleteMessages(from time.Time) []Message {
+func (d *Data) cleanMessages(from time.Duration) []Message {
+	startingDate := time.Now().Add(-from)
 	deletedMessages := []Message{}
 	i := 0
 	for {
 		if i >= len(d.Messages) {
 			break
 		}
-		if time.Time.Compare(d.Messages[i].Time, from) < 0 {
+		if time.Time.Compare(d.Messages[i].Time, startingDate) < 0 {
 			deletedMessages = append(deletedMessages, d.Messages[i])
 			d.Messages[i] = d.Messages[len(d.Messages)-1]
 			d.Messages = d.Messages[:len(d.Messages)-1]
@@ -62,9 +63,4 @@ func (d *Data) deleteMessages(from time.Time) []Message {
 		i++
 	}
 	return deletedMessages
-}
-
-func (d *Data) cleanMessages(duration time.Duration) []Message{
-	ts := time.Now().Add(-duration)
-	return d.deleteMessages(ts)
 }

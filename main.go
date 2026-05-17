@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	db := storage.NewStorage(10*time.Second)
+	db := storage.NewStorage(10*time.Minute)
 	mqtt.StartServer(db)
 	for {
 		time.Sleep(time.Second)
