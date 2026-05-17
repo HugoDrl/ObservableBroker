@@ -1,14 +1,18 @@
 package main
 
 import (
-	"os"
+	"fmt"
+	"time"
 
 	"github.com/HugoDrl/ObservableBroker.git/mqtt"
+	"github.com/HugoDrl/ObservableBroker.git/storage"
 )
 
 func main() {
-	d := make(chan os.Signal, 1)
-	go mqtt.StartServer()
-	//Waits for interruption
-	<- d
+	db := storage.NewStorage(10*time.Second)
+	mqtt.StartServer(db)
+	for {
+		time.Sleep(time.Second)
+		fmt.Printf("%v\n", db)
+	}
 }
