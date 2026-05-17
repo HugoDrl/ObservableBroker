@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+	"os"
+
+	"github.com/HugoDrl/ObservableBroker.git/mqtt"
+)
 
 func main() {
-	fmt.Printf("hello word")
+	d := make(chan os.Signal, 1)
+	go mqtt.StartServer()
+	//Waits for interruption
+	<- d
 }
