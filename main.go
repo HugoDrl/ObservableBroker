@@ -14,7 +14,7 @@ func main() {
 	db := storage.NewStorage(10*time.Minute)
 
 	mqtt.StartServer(db)
-	http.StartServer()
+	http.StartServer(db)
 
 	<-d
 }
