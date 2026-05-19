@@ -1,6 +1,8 @@
 package mqtt
 
 import (
+	"log"
+
 	"github.com/HugoDrl/ObservableBroker.git/storage"
 	mqtt "github.com/mochi-mqtt/server/v2"
 	"github.com/mochi-mqtt/server/v2/hooks/auth"
@@ -16,7 +18,7 @@ func initServer(hook mqtt.Hook) *mqtt.Server{
 	return server
 }
 
-func StartServer(storage *storage.Data) {
+func StartServer(storage *storage.Data, logger *log.Logger) {
 	hook := NewPersistHook(storage)
 	server := initServer(hook)
 	go server.Serve()

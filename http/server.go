@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -14,10 +15,10 @@ func initServer(d *storage.Data) *http.Server {
 	return &s
 }
 
-func StartServer(d *storage.Data) *http.Server {
+func StartServer(d *storage.Data, logger *log.Logger) *http.Server {
 	s := initServer(d)
-	go s.ListenAndServe()
+	go log.Fatal(s.ListenAndServe())
 	// Don't want to do a custom format for ms, don't know is possible somehow else
-	fmt.Printf("time=%s HTTP server started and listening on %s\n",time.Now().Format(time.RFC3339), s.Addr)
+	logger.Writer().Write([]byte(fmt.Sprintf("time=%s HTTP server started and listening on %s\n",time.Now().Format(time.RFC3339), s.Addr)))
 	return s
 }
