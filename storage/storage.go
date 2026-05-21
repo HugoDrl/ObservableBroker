@@ -38,6 +38,9 @@ func NewStorage(ttl time.Duration) *Data{
 	d := Data{}
 	d.Topics = make(map[string]int)
 	go func(){
+		if ttl == 0 {
+			return
+		}
 		for {
 			d.cleanMessages(ttl)
 			time.Sleep(10*time.Second)

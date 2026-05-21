@@ -22,5 +22,5 @@ func StartServer(storage *storage.Data, logger *log.Logger) {
 	hook := NewPersistHook(storage, logger)
 	server := initServer(hook)
 	go server.Serve()
-	logger.Printf("MQTT server started%s\n")
+	logger.Printf("MQTT server started\n")
 }
