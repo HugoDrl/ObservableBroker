@@ -30,6 +30,7 @@ func (h *persistHook) Provides(b byte) bool {
 		mqtt.OnConnect,
 		mqtt.OnDisconnect,
 		mqtt.OnPublish,
+		mqtt.OnSubscribed,
 	}, []byte{b})
 }
 
@@ -42,6 +43,18 @@ func (h *persistHook) OnConnect(cl *mqtt.Client, pk packets.Packet) error{
 func (h *persistHook) OnDisconnect(cl *mqtt.Client, err error, expire bool) {
 	fmt.Printf("client disconnected ! [client: %s]\n", cl.ID)
 	h.Metrics.Clients--
+
+	for topic := range cl.State.Subscriptions.GetAll() {
+		fmt.Printf("client %s unsubscribed from %s\n", cl.ID, topic)
+		_, ok := h.Metrics.Topics[topic]
+		if !ok {
+			// How is it possible ? I panic too
+			panic(1)
+		}else {
+			h.Metrics.Topics[topic]--
+		}
+		fmt.Printf("topic %s now counts %d subscribers\n", topic, h.Metrics.Topics[topic])
+	}
 }
 
 func (h *persistHook) OnPublish(cl *mqtt.Client, pk packets.Packet) (packets.Packet, error) {
@@ -54,3 +67,16 @@ func (h *persistHook) OnPublish(cl *mqtt.Client, pk packets.Packet) (packets.Pac
 	})
 	return pk, nil
 }
+
+func (h *persistHook) OnSubscribed(cl *mqtt.Client, pk packets.Packet, b []byte){
+	for topic := range cl.State.Subscriptions.GetAll() {
+		fmt.Printf("client %s is now subscribed to %s\n", cl.ID, topic)
+		_, ok := h.Metrics.Topics[topic]
+		if !ok {
+			h.Metrics.Topics[topic] = 1
+		}else {
+			h.Metrics.Topics[topic]++
+		}
+	}
+}
+

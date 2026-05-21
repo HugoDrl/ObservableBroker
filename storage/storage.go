@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"slices"
 	"time"
 )
@@ -32,15 +31,15 @@ func MessageListEqual(l1, l2 []Message) bool {
 type Data struct{
 	Clients int16
 	Messages []Message
+	Topics map[string]int
 }
 
 func NewStorage(ttl time.Duration) *Data{
 	d := Data{}
+	d.Topics = make(map[string]int)
 	go func(){
-		var messagesDeleted int
 		for {
-			messagesDeleted = len(d.cleanMessages(ttl))
-			fmt.Printf("cleanup done. {%d} messages deleted\n", messagesDeleted)
+			d.cleanMessages(ttl)
 			time.Sleep(10*time.Second)
 		}
 	}()
