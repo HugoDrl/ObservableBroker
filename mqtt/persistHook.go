@@ -2,7 +2,7 @@ package mqtt
 
 import (
 	"bytes"
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/HugoDrl/ObservableBroker.git/storage"
@@ -13,10 +13,14 @@ import (
 type persistHook struct {
 	mqtt.HookBase
 	Metrics *storage.Data
+	logger *log.Logger
 }
 
-func NewPersistHook(storage *storage.Data) *persistHook{
-	h := persistHook{Metrics: storage}
+func NewPersistHook(storage *storage.Data, logger *log.Logger) *persistHook{
+	h := persistHook{
+		Metrics: storage,
+		logger: logger,
+	}
 	return &h
 }
 
@@ -35,17 +39,17 @@ func (h *persistHook) Provides(b byte) bool {
 }
 
 func (h *persistHook) OnConnect(cl *mqtt.Client, pk packets.Packet) error{
-	fmt.Printf("new client connected ! [client: %s]\n", cl.ID)
+	h.logger.Printf("new client connected ! [client: %s]\n", cl.ID)
 	h.Metrics.Clients++
 	return nil
 }
 
 func (h *persistHook) OnDisconnect(cl *mqtt.Client, err error, expire bool) {
-	fmt.Printf("client disconnected ! [client: %s]\n", cl.ID)
+	h.logger.Printf("client disconnected ! [client: %s]\n", cl.ID)
 	h.Metrics.Clients--
 
 	for topic := range cl.State.Subscriptions.GetAll() {
-		fmt.Printf("client %s unsubscribed from %s\n", cl.ID, topic)
+		h.logger.Printf("client %s unsubscribed from %s\n", cl.ID, topic)
 		_, ok := h.Metrics.Topics[topic]
 		if !ok {
 			// How is it possible ? I panic too
@@ -53,12 +57,12 @@ func (h *persistHook) OnDisconnect(cl *mqtt.Client, err error, expire bool) {
 		}else {
 			h.Metrics.Topics[topic]--
 		}
-		fmt.Printf("topic %s now counts %d subscribers\n", topic, h.Metrics.Topics[topic])
+		h.logger.Printf("topic %s now counts %d subscribers\n", topic, h.Metrics.Topics[topic])
 	}
 }
 
 func (h *persistHook) OnPublish(cl *mqtt.Client, pk packets.Packet) (packets.Packet, error) {
-	fmt.Printf("new message ! [client: %s message: %s]\n", cl.ID, pk.Payload)
+	h.logger.Printf("new message ! [client: %s message: %s]\n", cl.ID, pk.Payload)
 	h.Metrics.Messages = append(h.Metrics.Messages, storage.Message{
 		Time: time.Now(),
 		Sender: cl.ID,
@@ -70,7 +74,7 @@ func (h *persistHook) OnPublish(cl *mqtt.Client, pk packets.Packet) (packets.Pac
 
 func (h *persistHook) OnSubscribed(cl *mqtt.Client, pk packets.Packet, b []byte){
 	for topic := range cl.State.Subscriptions.GetAll() {
-		fmt.Printf("client %s is now subscribed to %s\n", cl.ID, topic)
+		h.logger.Printf("client %s is now subscribed to %s\n", cl.ID, topic)
 		_, ok := h.Metrics.Topics[topic]
 		if !ok {
 			h.Metrics.Topics[topic] = 1

@@ -1,10 +1,8 @@
 package http
 
 import (
-	"fmt"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/HugoDrl/ObservableBroker.git/storage"
 )
@@ -17,8 +15,10 @@ func initServer(d *storage.Data) *http.Server {
 
 func StartServer(d *storage.Data, logger *log.Logger) *http.Server {
 	s := initServer(d)
-	go log.Fatal(s.ListenAndServe())
-	// Don't want to do a custom format for ms, don't know is possible somehow else
-	logger.Writer().Write([]byte(fmt.Sprintf("time=%s HTTP server started and listening on %s\n",time.Now().Format(time.RFC3339), s.Addr)))
+	go func() {
+		logger.Fatal(s.ListenAndServe())
+	}()
+
+	logger.Printf("HTTP server started and listening on %s\n", s.Addr)
 	return s
 }
