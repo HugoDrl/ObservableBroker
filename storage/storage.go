@@ -12,6 +12,13 @@ type Message struct{
 	Content []byte
 }
 
+type Data struct{
+	ClientsConnected int32
+	Messages []Message
+	Topics map[string]int
+	ClientEvents []ClientEvent
+}
+
 func (m *Message) Equal(m2 *Message) bool {
 	if m.Time != m2.Time {return false}
 	if m.Sender != m2.Sender {return false}
@@ -28,12 +35,6 @@ func MessageListEqual(l1, l2 []Message) bool {
 	return true
 }
 
-type Data struct{
-	Clients int16
-	Messages []Message
-	Topics map[string]int
-}
-
 func NewStorage(ttl time.Duration) *Data{
 	d := Data{}
 	d.Topics = make(map[string]int)
@@ -47,6 +48,17 @@ func NewStorage(ttl time.Duration) *Data{
 		}
 	}()
 	return &d
+}
+
+func (d *Data) NewClientEvent(clientId string, isConnectEvent bool) {
+	var connectionType EventType
+	if isConnectEvent {
+		connectionType = CONNECTION
+	} else {
+		connectionType = DISCONNECTION
+	}
+	event := NewClientEvent(clientId, connectionType, time.Now())
+	d.ClientEvents = append(d.ClientEvents, *event)
 }
 
 func (d *Data) cleanMessages(from time.Duration) []Message {

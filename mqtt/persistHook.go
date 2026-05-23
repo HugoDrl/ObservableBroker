@@ -40,13 +40,15 @@ func (h *persistHook) Provides(b byte) bool {
 
 func (h *persistHook) OnConnect(cl *mqtt.Client, pk packets.Packet) error{
 	h.logger.Printf("new client connected ! [client: %s]\n", cl.ID)
-	h.Metrics.Clients++
+	h.Metrics.ClientsConnected++
+	h.Metrics.NewClientEvent(cl.ID, true)
 	return nil
 }
 
 func (h *persistHook) OnDisconnect(cl *mqtt.Client, err error, expire bool) {
 	h.logger.Printf("client disconnected ! [client: %s]\n", cl.ID)
-	h.Metrics.Clients--
+	h.Metrics.ClientsConnected--
+	h.Metrics.NewClientEvent(cl.ID, false)
 
 	for topic := range cl.State.Subscriptions.GetAll() {
 		h.logger.Printf("client %s unsubscribed from %s\n", cl.ID, topic)

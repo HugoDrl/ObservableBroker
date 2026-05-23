@@ -7,7 +7,7 @@ import (
 
 func TestDropOldStorage(t *testing.T) {
 	d := Data{
-		Clients: 0,
+		ClientsConnected: 0,
 		Messages: []Message{{
 			Time: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC),
 		}},
