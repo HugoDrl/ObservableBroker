@@ -12,13 +12,13 @@ import (
 
 type persistHook struct {
 	mqtt.HookBase
-	Metrics *storage.Data
+	storage storage.StorageWriter
 	logger *log.Logger
 }
 
-func NewPersistHook(storage *storage.Data, logger *log.Logger) *persistHook{
+func NewPersistHook(storage *storage.StorageWriter, logger *log.Logger) *persistHook{
 	h := persistHook{
-		Metrics: storage,
+		storage: *storage,
 		logger: logger,
 	}
 	return &h
@@ -40,49 +40,46 @@ func (h *persistHook) Provides(b byte) bool {
 
 func (h *persistHook) OnConnect(cl *mqtt.Client, pk packets.Packet) error{
 	h.logger.Printf("new client connected ! [client: %s]\n", cl.ID)
-	h.Metrics.ClientsConnected++
-	h.Metrics.NewClientEvent(cl.ID, true)
+	array := cl.State.Subscriptions.GetAll() 
+	topics := make([]string, len(array))
+	for topic := range array {
+		topics = append(topics, topic)
+	}
+	event := storage.NewConnectionEvent(cl.ID, topics, true, time.Now())
+	h.storage.InsertClientEvent(event, storage.CONNECTION)
 	return nil
 }
 
 func (h *persistHook) OnDisconnect(cl *mqtt.Client, err error, expire bool) {
 	h.logger.Printf("client disconnected ! [client: %s]\n", cl.ID)
-	h.Metrics.ClientsConnected--
-	h.Metrics.NewClientEvent(cl.ID, false)
-
-	for topic := range cl.State.Subscriptions.GetAll() {
-		h.logger.Printf("client %s unsubscribed from %s\n", cl.ID, topic)
-		_, ok := h.Metrics.Topics[topic]
-		if !ok {
-			// How is it possible ? I panic too
-			panic(1)
-		}else {
-			h.Metrics.Topics[topic]--
-		}
-		h.logger.Printf("topic %s now counts %d subscribers\n", topic, h.Metrics.Topics[topic])
+	array := cl.State.Subscriptions.GetAll() 
+	topics := make([]string, len(array))
+	for topic := range array {
+		topics = append(topics, topic)
 	}
+	event := storage.NewConnectionEvent(cl.ID, topics, false, time.Now())
+	h.storage.InsertClientEvent(event, storage.DISCONNECTION)
 }
 
 func (h *persistHook) OnPublish(cl *mqtt.Client, pk packets.Packet) (packets.Packet, error) {
 	h.logger.Printf("new message ! [client: %s message: %s]\n", cl.ID, pk.Payload)
-	h.Metrics.Messages = append(h.Metrics.Messages, storage.Message{
+	message := storage.Message{
 		Time: time.Now(),
 		Sender: cl.ID,
 		Topic: pk.TopicName,
 		Content: pk.Payload,
-	})
+	}
+	h.storage.InsertMessage(message)
 	return pk, nil
 }
 
 func (h *persistHook) OnSubscribed(cl *mqtt.Client, pk packets.Packet, b []byte){
-	for topic := range cl.State.Subscriptions.GetAll() {
-		h.logger.Printf("client %s is now subscribed to %s\n", cl.ID, topic)
-		_, ok := h.Metrics.Topics[topic]
-		if !ok {
-			h.Metrics.Topics[topic] = 1
-		}else {
-			h.Metrics.Topics[topic]++
-		}
+	h.logger.Printf("client subscribed ! [client: %s, topics: %v]\n", cl.ID, cl.State.Subscriptions.GetAll())
+	array := cl.State.Subscriptions.GetAll()
+	topics := make([]string, len(array))
+	for topic := range array {
+		topics = append(topics, topic)
 	}
+	h.storage.AddTopicsConnection(topics)
 }
 
