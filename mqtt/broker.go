@@ -18,7 +18,7 @@ func initServer(hook mqtt.Hook) *mqtt.Server{
 	return server
 }
 
-func StartServer(storage *storage.StorageWriter, logger *log.Logger) {
+func StartServer(storage storage.StorageWriter, logger *log.Logger) {
 	hook := NewPersistHook(storage, logger)
 	server := initServer(hook)
 	go server.Serve()

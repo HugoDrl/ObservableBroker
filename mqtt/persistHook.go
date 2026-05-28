@@ -16,9 +16,9 @@ type persistHook struct {
 	logger *log.Logger
 }
 
-func NewPersistHook(storage *storage.StorageWriter, logger *log.Logger) *persistHook{
+func NewPersistHook(storage storage.StorageWriter, logger *log.Logger) *persistHook{
 	h := persistHook{
-		storage: *storage,
+		storage: storage,
 		logger: logger,
 	}
 	return &h
