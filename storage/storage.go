@@ -27,6 +27,12 @@ type StorageWriter interface {
 	AddTopicsConnection(topics []string)error
 }
 
+type StorageReader interface {
+	ReadEvents() []ClientEvent
+	GetConnectedClients() int32
+	ReadMessages() []Message
+}
+
 func (m *Message) Equal(m2 *Message) bool {
 	if m.Time != m2.Time {return false}
 	if m.Sender != m2.Sender {return false}
@@ -145,4 +151,16 @@ func (d *Data) cleanMessages(from time.Duration) ([]Message, error) {
 		i++
 	}
 	return deletedMessages, nil
+}
+
+func (d *Data) ReadMessages() []Message {
+	return d.Messages
+}
+
+func (d *Data) ReadEvents() []ClientEvent {
+	return d.ClientEvents
+}
+
+func (d *Data)GetConnectedClients() int32 {
+	return d.ClientsConnected
 }
