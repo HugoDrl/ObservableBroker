@@ -16,8 +16,6 @@ func main() {
 	filename := flag.String("logfile", "", "log file to write to")
 	ttlInt := flag.Int64("ttl", 0, "received messages' time to live (in seconds)")
 
-	d := make(chan(os.Signal), 1)
-
 	// Init storage with data time to live
 	ttl := time.Duration(*ttlInt) * time.Minute
 	db := storage.NewStorage(ttl)
@@ -32,5 +30,7 @@ func main() {
 	mqtt.StartServer(db, logger)
 	http.StartServer(db, logger)
 
+	// Prevents program to stop, has to be manually stopped
+	d := make(chan struct{})
 	<-d
 }

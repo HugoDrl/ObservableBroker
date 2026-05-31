@@ -7,7 +7,7 @@ This is most useful for supervising broker and clients.
 
 ## Usage
 
-This tool is mainly meant to allow bridging between things and listeners using both protocols, as MQTT is used in Internet Of Things (IoT) and HTTP is used by cloud servers, mainly.  
+This tool is mainly meant to allow bridging between things and listeners using both protocols, as MQTT is used in Internet Of Things (IoT) and HTTP is used by other software services, like cloud and web.  
 This tool is mainly made because I like the idea of connecting and giving access to connectivity without having to do file configs or code, and try to make it attractive.
 
 ## Development
